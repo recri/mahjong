@@ -81,15 +81,6 @@ export function Game(root, layout, tiles, seed) {
 	return clock_seconds-start_time
     }
 
-    function scan_game(seed) {
-	let a = 'a'.charCodeAt(0)
-	let n = 0
-	for (let c of seed.split('').map(x => x.charCodeAt(0))) {
-	    n = n * 26 + (c-a)
-	}
-	return n
-    }
-
     function format_game (game) {
 	let format = []
 	let a = 'a'.charCodeAt(0)
@@ -135,7 +126,8 @@ export function Game(root, layout, tiles, seed) {
 	draw : (slot, name) => tiles.draw(slot, name),
 	show : (slot, name, tag) => tiles.show(slot, name, tag),
 	hide : (slot, name) => tiles.hide(slot, name),
-
+	reorder : (neworder) => tiles.reorder(neworder),
+	
 	// recreate mahjong::canvas
 	set_name_slot : (name, slot) => name_to_slot.set(name, slot),
 	get_name_slot : (name) => name_to_slot.get(name),
@@ -143,47 +135,45 @@ export function Game(root, layout, tiles, seed) {
 	get_slot_name : (slot) => layout.get_slot(slot),
 	is_empty_slot : (slot) => layout.is_empty(slot),
 	get_all_slots : () => layout.get_slots(),
-	get_remaining_tiles : () => tiles.get_tiles().filter((name) => (name_to_slot.get(name) != null)),
+	get_remaining_tiles : () => tiles.get_tiles().filter((name) => (name_to_slot.get(name) !== null)),
 	tile_sizes : () => tiles.sizes(),
 	layout_sizes : () => layout.sizes(),
 	xy_for_slot : (slot) => tiles.xy_for_slot(slot),
 
 	menu_item_id : function(label) {
 	    switch (label) {
-	    case "Undo": return 'undo_move'
-	    case "Redo": return 'redo_move'
-	    case "New Game": return 'new_game'
-	    case "Restart": return 'restart_game'
-	    case "Pause": return '' // 'pause_game'
-	    case "Continue": return '' // 'continue_game'
-	    case "Hint": return '' // 'hint_move'
-	    case "Scores": return '' // 'scores_page'
-	    case "Preferences": return '' // 'prefs_page'
-	    case "Help": return '' // 'help_page'
-	    case "About": return '' // 'about_page'
+	    case "Undo": return 'menu_undo_move'
+	    case "Redo": return 'menu_redo_move'
+	    case "New Game": return 'menu_new_game'
+	    case "Restart": return 'menu_restart_game'
+	    case "Pause": return '' // 'menu_pause_game'
+	    case "Continue": return '' // 'menu_continue_game'
+	    case "Hint": return '' // 'menu_hint_move'
+	    case "Scores": return '' // 'menu_scores_page'
+	    case "Preferences": return '' // 'menu_prefs_page'
+	    case "Help": return '' // 'menu_help_page'
+	    case "About": return '' // 'menu_about_page'
 	    default: console.log("unhandled disable "+label)
 		return ''
 	    }
 	},
 	
-	menu_disable : function(label, disabled) {
-	    let id = this.menu_item_id(label)
-	    if (id !== '') root.$[id].disabled = disabled
-	},
-
 	menu_is_disabled : function(label) {
 	    let id = this.menu_item_id(label)
-	    if (id !== '') return root.$[id].disabled
-	    return true
+	    return (id !== '') ? root[id] : true
 	},
 	
 	menu_enable_disable : function(enable, disable) {
-	    for (let label of enable) { this.menu_disable(label, false) }
-	    for (let label of disable) { this.menu_disable(label, true) }
+	    const update = (label, value) => {
+		let id = this.menu_item_id(label)
+		if (id !== '') root[id] = value
+	    }
+	    enable.forEach((label) => update(label, false))
+	    enable.forEach((label) => update(label, true))
 	},
 
-	first_game : function(seed) {
-	    this.new_game(seed)
+	first_game : function() {
+	    this.new_game()
 	},
 	new_game : function() {
 	    this.setup()
@@ -192,8 +182,10 @@ export function Game(root, layout, tiles, seed) {
 		try {
 		    this.restart()
 		} catch(e) {
-		    // console.log("restart failed: "+e)
-		    // console.log("reshuffling and retrying")
+		    console.log("restart failed: "+e)
+		    console.log(e.stack)
+		    return	// remove me when debugged
+		    console.log("reshuffling and retrying")
 		    shuffled_slots = shuffle(shuffled_slots)
 		    done = false
 		}
@@ -240,17 +232,16 @@ export function Game(root, layout, tiles, seed) {
 	    return plain.concat(endcaps)
 	},
 
+	// did this by rewriting the dom, now ask tiles to reorder its list
 	raise_in_render_order : function() {
 	    // presuming that get_all_slots() returns slots in render order
-	    for (let slot of this.get_all_slots()) {
+	    let neworder = this.get_all_slots().reduce((acc, slot) => {
 		let tile = this.get_slot_name(slot)
-		if (tile) {
-		    // move it to the end of the render list
-		    root.$.mahjong.removeChild(root.$[tile])
-		    root.$.mahjong.appendChild(root.$[tile])
-		    // $win raise [$self get-slot-name $slot]
-		}
-	    }
+		if (tile) acc.push(tile) // not sure why this guard is necessary
+		return acc
+	    }, []);
+	    // tell tiles the new order
+	    this.reorder(neworder)
 	},
     
 	//
@@ -286,13 +277,13 @@ export function Game(root, layout, tiles, seed) {
 		    // open {restart} {new game} {undo} {quit} dialog 
 		    // console.log("you lose")
 		    this.menu_enable_disable([], ["Undo", "Redo", "New Game", "Restart"])
-		    root.$.youlose.open()
+		    root.youlose.open()
 		} else {
 		    // game won	
 		    // open scores positioned at new score
 		    // console.log("you win")
 		    this.menu_enable_disable([], ["Undo", "Redo", "New Game", "Restart"])
-		    root.$.youwin.open()
+		    root.youwin.open()
 		}
 	    }
 	},
@@ -728,22 +719,20 @@ export function Game(root, layout, tiles, seed) {
 		} else {
 		    this.set_selected(slot1,name1)
 		}
-		// this is from the original tcl/tk
-		// but not how we get the right order now
-		// this.raise_in_render_order()
 	    }
 	},
 	//
 	window_resize : function(wiw, wih) { 
-	    // console.log("window_resize")
 	    tiles.resize(wiw, wih) 
 	    for (let name of this.get_tiles()) {
 		tiles.position(this.get_name_slot(name), name)
 	    }
 	},
+	get_seed : function() { return seed; }
     }
 
-    // start first game
-    game.first_game(seed)
+    // console.log("Game() begins")
+    game.first_game()
+    // console.log("Game() finished")
     return game
 }

@@ -261,7 +261,7 @@ export function Layout(root) {
 		}
 	    }
 	    if (this.exists(xyz, "triple-point-lrr")) {
-		[t,l,r1,r2] = this.get(xyz, "triple-point-lrr")
+		let [t,l,r1,r2] = this.get(xyz, "triple-point-lrr")
 		let cl = this.all_empty(this.left_closure(l))
 		let cr1 = this.all_empty(this.right_closure(r1))
 		let cr2 = this.all_empty(this.right_closure(r2))

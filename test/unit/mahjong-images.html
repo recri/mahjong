@@ -1,0 +1,59 @@
+<!--
+@license
+Copyright (c) 2018 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>mahjong-images</title>
+
+    <script src="../../node_modules/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src="../../node_modules/wct-browser-legacy/browser.js"></script>
+
+    <!-- Import the element to test -->
+    <script type="module" src="../../src/mahjong-app.js"></script>
+  </head>
+  <body>
+    <test-fixture id="basic">
+      <template>
+        <mahjong-app></mahjong-app>
+      </template>
+    </test-fixture>
+
+    <script type="module">
+      import 'axe-core/axe.min.js';
+      import {axeReport} from 'pwa-helpers/axe-report.js';
+      import {Images} from '../../src/mahjong-images.js';
+
+      suite('mahjong-image tests', function() {
+        let el;
+        setup(function() {
+          el = fixture('basic');
+        });
+
+        test('has image names', function() {
+	  assert.equal(Images.imageNames.length, `${144/4}`);
+        });
+
+        test('images defined', function() {
+          assert(Images.plainTile !== undefined);
+          assert(Images.selectedTile !== undefined);
+          assert(Images.getImage('oneCoin-1') != undefined)
+        });
+
+        test('a11y', function() {
+          return axeReport(el);
+        });
+      });
+    </script>
+  </body>
+</html>

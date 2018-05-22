@@ -143,6 +143,7 @@ class MahjongApp extends (LitElement) {
     }
 
     _didRender(properties, changeList) {
+	console.log(`_didRender changeList`); console.log(changeList)
     }
 
     _stateChanged(state) {
@@ -151,6 +152,7 @@ class MahjongApp extends (LitElement) {
     
     update_game() {
 	this.seed = this.game.get_seed();
+	this._requestRender();
     }
     
     window_resize(e) { 

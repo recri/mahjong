@@ -535,7 +535,7 @@ export function Game(root, layout, tiles, seed) {
 		// at the start of each game by redoing moves
 		this.history_empty()
 		while (moves.length >= 4) {
-		    let [name1, slot1, name2, slot2] = moves.splice(0,4)
+		    const [name1, slot1, name2, slot2] = moves.splice(0,4)
 		    this.history_add(name1, slot1, name2, slot2)
 		}
 		this.history_restore(this.history_save_reversed())
@@ -722,11 +722,12 @@ export function Game(root, layout, tiles, seed) {
 	    }
 	},
 	//
+	tiles_position : function() {
+	    this.get_tiles().forEach((name) => tiles.position(this.get_name_slot(name), name))
+	},
 	window_resize : function(wiw, wih) { 
 	    tiles.resize(wiw, wih) 
-	    for (let name of this.get_tiles()) {
-		tiles.position(this.get_name_slot(name), name)
-	    }
+	    this.tiles_position()
 	},
 	get_seed : function() { return seed; }
     }

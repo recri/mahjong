@@ -22,13 +22,12 @@ export function Tiles(root, layout) {
     // with styling incorporated inline
     // which must be redrawn for each render
     const tileMake = (id) =>  {
-	//console.log(`Images.getImage(${id}) yields`);	console.log(Images.getImage(id))
 	return html`
 <button class="tile" id="${id}" on-click=${(e) => root.tile_tap(e.currentTarget.id)}>
   <svg viewBox="0 0 64 88">
     <g class="bg">${Images.plainTile}</g>
     <g class="mg">${Images.selectedTile}</g>
-    <g class="fg">${Images.getImage(id)}</g>
+    <g class="fg">${Images[id.slice(0,-2)]}</g>
   </svg>
 </button>`;
     }

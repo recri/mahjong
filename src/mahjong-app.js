@@ -43,13 +43,10 @@ class MahjongApp extends (LitElement) {
     margin: 0 0; padding: 0 0; border: 0;
   }
   div#toolbar-menu button svg {
-    stroke: white;
-    fill: white;
-    color: white;
     height: 24px; width 24px;
   }
   div#toolbar-menu button svg g {
-    stroke: black; fill: black;
+    fill: white;
   }
   .definitions {
     display:none; 

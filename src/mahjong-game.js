@@ -142,34 +142,48 @@ export function Game(root, layout, tiles, seed) {
 
 	menu_item_id : function(label) {
 	    switch (label) {
-	    case "Undo": return 'menu_undo_move'
-	    case "Redo": return 'menu_redo_move'
-	    case "New Game": return 'menu_new_game'
-	    case "Restart": return 'menu_restart_game'
-	    case "Pause": return '' // 'menu_pause_game'
-	    case "Continue": return '' // 'menu_continue_game'
-	    case "Hint": return '' // 'menu_hint_move'
-	    case "Scores": return '' // 'menu_scores_page'
-	    case "Preferences": return '' // 'menu_prefs_page'
-	    case "Help": return '' // 'menu_help_page'
-	    case "About": return '' // 'menu_about_page'
-	    default: console.log("unhandled disable "+label)
+	    case "Undo": return 'undo_move'
+	    case "Redo": return 'redo_move'
+	    case "New Game": return 'new_game'
+	    case "Restart": return 'restart_game'
+	    case "Pause": return '' // 'pause_game'
+	    case "Continue": return '' // 'continue_game'
+	    case "Hint": return '' // 'hint_move'
+	    case "Scores": return '' // 'scores_page'
+	    case "Preferences": return '' // 'prefs_page'
+	    case "Help": return '' // 'help_page'
+	    case "About": return '' // 'about_page'
+	    default: 
+		console.log("unhandled disable "+label)
 		return ''
 	    }
 	},
 	
+	menu_element : function(label) {
+	    const id = this.menu_item_id(label);
+	    if (id && id !== '' && root && root.shadowRoot && root.shadowRoot.getElementById) {
+		return root.shadowRoot.getElementById(id)
+	    }
+	},
+	
+	menu_update : function(label, disabled) {
+	    const elt = this.menu_element(label)
+	    if (elt) {
+		if (disabled)
+		    elt.setAttribute("disabled", "");
+		else if (elt.hasAttribute("disabled"))
+		    elt.removeAttribute("disabled")
+	    }
+	},
+	
 	menu_is_disabled : function(label) {
-	    let id = this.menu_item_id(label)
-	    return (id !== '') ? root[id] : true
+	    const elt = this.menu_element(label)
+	    return elt && elt.hasAttribute("disabled")
 	},
 	
 	menu_enable_disable : function(enable, disable) {
-	    const update = (label, value) => {
-		let id = this.menu_item_id(label)
-		if (id !== '') root[id] = value
-	    }
-	    enable.forEach((label) => update(label, false))
-	    enable.forEach((label) => update(label, true))
+	    enable.forEach((label) => this.menu_update(label, false))
+	    disable.forEach((label) => this.menu_update(label, true))
 	},
 
 	first_game : function() {

@@ -11,15 +11,11 @@ class MahjongApp extends (LitElement) {
     static get properties() {
 	return {
 	    seed: String,
-	    menu_undo_move: Boolean,
-	    menu_redo_move: Boolean,
-	    menu_new_game: Boolean,
-	    menu_restart_game: Boolean,
 	    tiles: Object
 	}
     }
 
-    _render({ seed, tiles, menu_undo_move, menu_redo_move, menu_new_game, menu_restart_game } ) {
+    _render({ seed, tiles } ) {
 	console.log("mahjong-app _render called");
 	// Anything that's related to rendering should be done in here.
 	return html`
@@ -44,6 +40,9 @@ class MahjongApp extends (LitElement) {
   }
   div#toolbar-menu button svg {
     height: 24px; width 24px;
+  }
+  div#toolbar-menu button:disabled svg g {
+    fill: grey;
   }
   div#toolbar-menu button svg g {
     fill: white;
@@ -70,13 +69,13 @@ class MahjongApp extends (LitElement) {
 <div id="mahjong">${tiles.html_template()}</div>
 
 <div id="toolbar-menu">
-  <button id="new_game" on-click="${(e) => this.action_new(e)}" title="New Game" disabled?="{$menu_new_game}">
+  <button id="new_game" on-click="${(e) => this.action_new(e)}" title="New Game">
     ${Icons.newGame}</button>
-  <button id="restart_game" on-click="${(e) => this.action_restart(e)}" title="Restart Game" disabled?="{$menu_restart_game}">
+  <button id="restart_game" on-click="${(e) => this.action_restart(e)}" title="Restart Game">
     ${Icons.restartGame}</button>
-  <button id="undo_move" on-click="${(e) => this.action_undo(e)}" title="Undo Move" disabled?="{$menu_undo_move}">
+  <button id="undo_move" on-click="${(e) => this.action_undo(e)}" title="Undo Move">
     ${Icons.undoMove}</button>
-  <button id="redo_move" on-click="${(e) => this.action_redo(e)}" title="Redo Move" disabled?="{$menu_redo_move}">
+  <button id="redo_move" on-click="${(e) => this.action_redo(e)}" title="Redo Move">
     ${Icons.redoMove}</button>
 </div>
     

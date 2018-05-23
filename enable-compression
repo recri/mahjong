@@ -1,0 +1,4 @@
+#!/bin/sh
+for f in build/es?-bundled; do
+    echo 'zlib.output_compression = On' > $f/.user.ini
+done

@@ -37,7 +37,7 @@ class MahjongApp extends (LitElement) {
   }
 
   div#toolbar-menu {
-    position:absolute; top:8px; left:8px; width:30px;
+    position:absolute; top:8px; left:8px;
   }
   div#toolbar-menu button {
     background-color: transparent;
@@ -55,16 +55,18 @@ class MahjongApp extends (LitElement) {
   .definitions {
     display:none; 
   }
-  /* this actually needs to switch when the aspect ratio goes from portrait to landscape
-   * in portrait, display horizontally, in landscape, display vertically */
-  /*
-      @media (min-width: 460px) {
-        div#toolbar-menu {
-          display: block;
-	  width: 100%;
-        }
-      }
-  */
+  @media screen and (orientation: landscape) {
+    div#toolbar-menu {
+      width: 30px;
+    }
+  }
+
+  @media screen and (orientation: portrait) {
+    div#toolbar-menu {
+      width: 100%;
+    }
+  }
+
   button.tile { display:inline; margin: 0 0; padding: 0 0; border: 0; background-color: transparent; }
   button.tile g.bg { display:inline; }
   button.tile g.mg { display:none; }

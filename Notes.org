@@ -1,0 +1,15 @@
+* Bemused at all the cruft remaining here.
+** define a <mahjong-tile> element that
+*** has an id
+**** which is it's tile name
+**** which identifies it's image
+*** has one of four states
+**** hidden, plain, selected, or blank
+     which decode to various combinations of display:(none|inline)
+     on the tile or its subimages
+*** has a slot
+    which defines its x, y, and z in the board layout
+    which translates to top and left on the screen
+    if given the scale
+*** has a width and height
+    which apply to the svg image

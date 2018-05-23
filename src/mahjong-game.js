@@ -1,5 +1,16 @@
 import { alea } from './alea.js';
+import { Timer } from './timer.js';
 
+//
+// actual external references into game
+// get_seed()
+// window_resize(w, h)
+// tile_tap(name)
+// history_undo()
+// history_redo()
+// new_game()
+// restart_game()
+//
 export function Game(root, layout, tiles, seed) {
     // local variables
     let title = "mahjong"
@@ -14,23 +25,11 @@ export function Game(root, layout, tiles, seed) {
     let selected = null
     let status_started = false
     let name_to_slot = new Map()
-
+    let timer = new Timer()
     // local functions
     let random = alea("this is the seed").double
 
     function srandom(seed) { random = alea(seed).double }
-
-    function current_time_string() {
-	let now = new Date()
-	let zerofill2 = (n) => n > 9 ? ""+n : "0"+n
-	let year = ""+now.getFullYear()
-	let month = zerofill2(now.getMonth()+1)
-	let day = zerofill2(now.getDate())
-	let hour = zerofill2(now.getHours())
-	let minute = zerofill2(now.getMinutes())
-	let second = zerofill2(now.getSeconds())
-	return year+month+day+hour+minute+second
-    }
 
     function shuffle(list) {
 	list = list.slice(0)
@@ -47,39 +46,7 @@ export function Game(root, layout, tiles, seed) {
 	return list
     }
     
-    function clock_millis() { return Date.now() }
-    function clock_seconds() { return Math.floor(clock_millis() / 1000) }
-
     function slot_string(slot) { return slot.join(",") }
-
-    let start_game = 0
-    let start_time = 0
-    let stop_time = 0
-
-    function reset_timer() {
-	start_game = clock_seconds()
-	start_time = 0
-	stop_time = 0
-    }
-
-    function start_timer() { if (start_time == 0) { start_time = clock_seconds() } }
-
-    function stop_timer() { if (stop_time == 0) { stop_time = clock_seconds() } }
-
-    function pause_timer() { if (stop_time == 0) { stop_time = clock_seconds() } }
-
-    function continue_timer() {
-	if (stop_time != 0) { 
-	    start_time = clock_seconds()-(stop_time-start_time)
-	    stop_time = 0
-	}
-    }
-
-    function elapsed_time() {
-	if (start_time == 0) return 0
-	if (stop_time != 0) return stop_time-start_time
-	return clock_seconds-start_time
-    }
 
     function format_game (game) {
 	let format = []
@@ -140,51 +107,6 @@ export function Game(root, layout, tiles, seed) {
 	layout_sizes : () => layout.sizes(),
 	xy_for_slot : (slot) => tiles.xy_for_slot(slot),
 
-	menu_item_id : function(label) {
-	    switch (label) {
-	    case "Undo": return 'undo_move'
-	    case "Redo": return 'redo_move'
-	    case "New Game": return 'new_game'
-	    case "Restart": return 'restart_game'
-	    case "Pause": return '' // 'pause_game'
-	    case "Continue": return '' // 'continue_game'
-	    case "Hint": return '' // 'hint_move'
-	    case "Scores": return '' // 'scores_page'
-	    case "Preferences": return '' // 'prefs_page'
-	    case "Help": return '' // 'help_page'
-	    case "About": return '' // 'about_page'
-	    default: 
-		console.log("unhandled disable "+label)
-		return ''
-	    }
-	},
-	
-	menu_element : function(label) {
-	    const id = this.menu_item_id(label);
-	    if (id && id !== '' && root && root.shadowRoot && root.shadowRoot.getElementById) {
-		return root.shadowRoot.getElementById(id)
-	    }
-	},
-	
-	menu_update : function(label, disabled) {
-	    const elt = this.menu_element(label)
-	    if (elt) {
-		if (disabled)
-		    elt.setAttribute("disabled", "");
-		else if (elt.hasAttribute("disabled"))
-		    elt.removeAttribute("disabled")
-	    }
-	},
-	
-	menu_is_disabled : function(label) {
-	    const elt = this.menu_element(label)
-	    return elt && elt.hasAttribute("disabled")
-	},
-	
-	menu_enable_disable : function(enable, disable) {
-	    enable.forEach((label) => this.menu_update(label, false))
-	    disable.forEach((label) => this.menu_update(label, true))
-	},
 
 	first_game : function() {
 	    this.new_game()
@@ -198,7 +120,7 @@ export function Game(root, layout, tiles, seed) {
 		} catch(e) {
 		    console.log("restart failed: "+e)
 		    console.log(e.stack)
-		    return	// remove me when debugged
+		    // return	// remove me when debugged
 		    console.log("reshuffling and retrying")
 		    shuffled_slots = shuffle(shuffled_slots)
 		    done = false
@@ -270,7 +192,7 @@ export function Game(root, layout, tiles, seed) {
     
 	update_status : function() {
 	    let gname = format_game(this.game)
-	    let elapsed = elapsed_time()
+	    let elapsed = timer.elapsed()
 	    // let elapsed =[format {%d:%02d} [expr {$elapsed/60}] [expr {$elapsed%60}]]
 	    // wm title . "$options(-title) - $gname - $elapsed - $options(-remaining-moves) moves, $options(-remaining-tiles) tiles"
 	    // FIX.ME after 100 ms call  this.update_status
@@ -283,21 +205,21 @@ export function Game(root, layout, tiles, seed) {
 	},
 	update_score : function() {
 	    remaining_moves = this.count_moves()
-	    this.score_game(start_game, elapsed_time(), game, remaining_moves, remaining_tiles)
+	    this.score_game(timer.start_game, timer.elapsed(), game, remaining_moves, remaining_tiles)
 	    if (remaining_moves == 0) {
-		stop_timer()
+		timer.stop()
 		if (remaining_tiles > 0) {
 		    // game lost
 		    // open {restart} {new game} {undo} {quit} dialog 
 		    // console.log("you lose")
-		    this.menu_enable_disable([], ["Undo", "Redo", "New Game", "Restart"])
-		    root.youlose.open()
+		    root.menu_enable_disable([], ["Undo", "Redo", "New Game", "Restart"])
+		    root.youlose.showModal()
 		} else {
 		    // game won	
 		    // open scores positioned at new score
 		    // console.log("you win")
-		    this.menu_enable_disable([], ["Undo", "Redo", "New Game", "Restart"])
-		    root.youwin.open()
+		    root.menu_enable_disable([], ["Undo", "Redo", "New Game", "Restart"])
+		    root.youwin.showModal()
 		}
 	    }
 	},
@@ -310,7 +232,7 @@ export function Game(root, layout, tiles, seed) {
 	//
 	history_empty : function() {
 	    history = {count: 0, future: 0, items: []}
-	    this.menu_enable_disable([], ["Undo", "Redo"])
+	    root.menu_enable_disable([], ["Undo", "Redo"])
 	},
 	history_save_reversed : function() {
 	    return { count:0, future: history.future, items: history.items.reverse() }
@@ -319,25 +241,25 @@ export function Game(root, layout, tiles, seed) {
 	    this.clear_selected()
 	    history = h
 	    if (history.count < history.future) {
-		this.menu_enable_disable(["Undo", "Redo"], [])
+		root.menu_enable_disable(["Undo", "Redo"], [])
 	    } else {
-		this.menu_enable_disable(["Undo"],["Redo"])
+		root.menu_enable_disable(["Undo"],["Redo"])
 	    }
 	},
 	history_add : function(name1, slot1, name2, slot2) {
 	    this.clear_selected()
 	    history.items[history.count++] = [name1, slot1, name2, slot2]
 	    history.future = history.count
-	    this.menu_enable_disable(["Undo"],["Redo"])
+	    root.menu_enable_disable(["Undo"],["Redo"])
 	},
 	history_undo : function() {
 	    // step back
 	    this.clear_selected()
 	    this.move_place.apply(this, history.items[--history.count])
 	    if (history.count > 0) {
-		this.menu_enable_disable(["Undo", "Redo"], [])
+		root.menu_enable_disable(["Undo", "Redo"], [])
 	    } else {
-		this.menu_enable_disable(["Redo"],["Undo"])
+		root.menu_enable_disable(["Redo"],["Undo"])
 	    }
 	    this.update_score()
 	},
@@ -346,9 +268,9 @@ export function Game(root, layout, tiles, seed) {
 	    this.clear_selected()
 	    this.move_unplace.apply(this, history.items[history.count++])
 	    if (history.count < history.future) {
-		this.menu_enable_disable(["Undo", "Redo"], [])
+		root.menu_enable_disable(["Undo", "Redo"], [])
 	    } else {
-		this.menu_enable_disable(["Undo"],["Redo"])
+		root.menu_enable_disable(["Undo"],["Redo"])
 	    }
 	    this.update_score()
 	},
@@ -363,12 +285,10 @@ export function Game(root, layout, tiles, seed) {
 	    // the optional $game may be supplying a game by name
 	    // or simply the time
 	    if (location.hash === "") { 
-		seed = "#"+current_time_string()
-		// console.log("make seed: "+seed)
+		seed = "#"+Date.now()
 	    } else {
 		seed = location.hash
 		location.hash = ""
-		// console.log("find seed: "+seed)
 	    }
 	    srandom(seed)
 	    shuffled_slots = shuffle(this.get_all_slots())
@@ -383,7 +303,7 @@ export function Game(root, layout, tiles, seed) {
 	    // save the result of the last game
 	    this.score_game_save()
 	    // reset timer
-	    reset_timer()
+	    timer.reset()
 	    // clear selection
 	    this.clear_selected()
 	    // reset slot to name map
@@ -563,7 +483,7 @@ export function Game(root, layout, tiles, seed) {
 		}
 		remaining_moves = this.count_moves()
 	    }
-	    this.menu_enable_disable(["New Game", "Restart", "Pause", "Hint", "Redo", "Scores", "Preferences"], ["Continue", "Undo"])
+	    root.menu_enable_disable(["New Game", "Restart", "Pause", "Hint", "Redo", "Scores", "Preferences"], ["Continue", "Undo"])
 	},
     
 	//
@@ -719,7 +639,7 @@ export function Game(root, layout, tiles, seed) {
 		    } else if (this.match(name1, name2)) {
 			// it is a match to the previously selected tile
 			// start counting time if not already started
-			start_timer()
+			timer.start()
 			// remove the tiles from play
 			this.move_unplace(name1, slot1, name2, slot2)
 			// keep history
@@ -736,12 +656,15 @@ export function Game(root, layout, tiles, seed) {
 	    }
 	},
 	//
-	tiles_position : function() {
-	    this.get_tiles().forEach((name) => tiles.position(this.get_name_slot(name), name))
+	position_tiles : function() {
+	    this.get_tiles().forEach((name) => {
+		const slot = this.get_name_slot(name)
+		if (slot) tiles.position(slot, name)
+	    })
 	},
 	window_resize : function(wiw, wih) { 
 	    tiles.resize(wiw, wih) 
-	    this.tiles_position()
+	    this.position_tiles()
 	},
 	get_seed : function() { return seed; }
     }

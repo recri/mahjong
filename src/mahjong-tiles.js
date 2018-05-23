@@ -100,6 +100,10 @@ export function Tiles(root, layout) {
 	match : (name1, name2) => name1.substring(0,name1.length-2) === name2.substring(0,name2.length-2),
 
 	position : function(slot, name) {
+	    if ( ! slot || slot.length !== 3) {
+		console.log(`tiles.position(${slot}, ${name}) ignored.`)
+		return
+	    }
 	    const [x,y,z] = slot
 	    const sx = (x+0.1)*facew + z*offx
 	    const sy = (y+0.3)*faceh - z*offy

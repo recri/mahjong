@@ -11,13 +11,18 @@ class MahjongApp extends (LitElement) {
     static get properties() {
 	return {
 	    seed: String,
-	    tiles: Object
+	    /*
+	    tiles: Object,
+	    undo_move: Boolean,
+	    redo_move: Boolean,
+	    restart_game: Boolean,
+	    new_game: Boolean
+	    */
 	}
     }
 
-    _render({ seed, tiles } ) {
+    _render({ seed } ) {
 	console.log("mahjong-app _render called");
-	// Anything that's related to rendering should be done in here.
 	return html`
 <style>
   :host {
@@ -66,16 +71,16 @@ class MahjongApp extends (LitElement) {
   button.tile g.fg { display:inline; }
 </style>
 
-<div id="mahjong">${tiles.html_template()}</div>
+<div id="mahjong">${this.tiles.html_template()}</div>
 
 <div id="toolbar-menu">
-  <button id="new_game" on-click="${(e) => this.action_new(e)}" title="New Game">
+  <button id="new_game" on-click="${(e) => this.action_new(e)}" title="New Game" disabled?=${this.new_game}>
     ${Icons.newGame}</button>
-  <button id="restart_game" on-click="${(e) => this.action_restart(e)}" title="Restart Game">
+  <button id="restart_game" on-click="${(e) => this.action_restart(e)}" title="Restart Game" disabled?=${this.restart_game}>
     ${Icons.restartGame}</button>
-  <button id="undo_move" on-click="${(e) => this.action_undo(e)}" title="Undo Move">
+  <button id="undo_move" on-click="${(e) => this.action_undo(e)}" title="Undo Move" disabled?=${this.undo_move}>
     ${Icons.undoMove}</button>
-  <button id="redo_move" on-click="${(e) => this.action_redo(e)}" title="Redo Move">
+  <button id="redo_move" on-click="${(e) => this.action_redo(e)}" title="Redo Move" disabled?=${this.redo_move}>
     ${Icons.redoMove}</button>
 </div>
     
@@ -86,18 +91,18 @@ class MahjongApp extends (LitElement) {
     start the game over,
     or start a new game.</p>
   <div class="buttons">
-    <button raised dialog-confirm on-click="${(e) => this.dialog_undo(e)}">Undo</button>
-    <button raised dialog-confirm on-click="${(e) => this.dialog_restart(e)}">Restart</button>
-    <button raised dialog-confirm on-click="${(e) => this.dialog_new(e)}">New Game</button>
+    <button raised dialog-confirm on-click=${(e) => this.youlose_undo(e)}>Undo</button>
+    <button raised dialog-confirm on-click=${(e) => this.youlose_restart(e)}>Restart</button>
+    <button raised dialog-confirm on-click=${(e) => this.youlose_new(e)}>New Game</button>
   </div>
 </dialog>
       
 <dialog id="youwin" modal>
   <h2>You have won the game</h2>
   <div class="buttons">
-    <button raised dialog-confirm on-click="${(e) => this.dialog_undo(e)}">Undo</button>
-    <button raised dialog-confirm on-click="${(e) => this.dialog_restart(e)}">Restart</button>
-    <button raised dialog-confirm on-click="${(e) => this.dialog_new(e)}">New Game</button>
+    <button raised dialog-confirm on-click=${(e) => this.youwin_undo(e)}>Undo</button>
+    <button raised dialog-confirm on-click=${(e) => this.youwin_restart(e)}>Restart</button>
+    <button raised dialog-confirm on-click=${(e) => this.youwin_new(e)}>New Game</button>
   </div>
 </dialog>
 `;
@@ -109,10 +114,10 @@ class MahjongApp extends (LitElement) {
 	// See https://www.polymer-project.org/2.0/docs/devguide/gesture-events#use-passive-gesture-listeners
 	setPassiveTouchGestures(true);
 	
-	this.menu_undo_move = false
-	this.menu_redo_move = false
-	this.menu_new_game = false
-	this.menu_restart_game = false
+	this.undo_move = false
+	this.redo_move = false
+	this.new_game = false
+	this.restart_game = false
 	
 	// tile layout
 	this.layout = Layout(this);
@@ -126,20 +131,18 @@ class MahjongApp extends (LitElement) {
 	this.update_game();
     }
 
-    ready() {
-	super.ready()
+    _firstRendered() {
 	// window resize handler
 	let self = this
 	window.onresize = (e) => self.window_resize(e)
-
-    }
-
-    _firstRendered() {
-	// this.window_resize(null)
+	// try a first resize for luck
+	this.window_resize(null)
     }
 
     _didRender(properties, changeList) {
-	console.log(`_didRender changeList`); console.log(changeList)
+	// console.log(`_didRender changeList`); console.log(changeList)
+	this.position_tiles()
+	this.menu_assert_all()
     }
 
     _stateChanged(state) {
@@ -148,37 +151,109 @@ class MahjongApp extends (LitElement) {
     
     update_game() {
 	this.seed = this.game.get_seed();
-	this._requestRender();
+	// this._requestRender();
     }
     
     window_resize(e) { 
 	// I want to do this by css transform:scale(...)
 	// or by drawing the entire thing in svg and using svg transform
-	this.game.window_resize(window.innerWidth, window.innerHeight);
-	this._requestRender();
+	if (window.innerWidth === 0 || window.innerHeight === 0)
+	    this.game.window_resize(200, 200);
+	else
+	    this.game.window_resize(window.innerWidth, window.innerHeight);
+	// this._requestRender();
     }
+
+    // toolbar menu management
+    menu_item_id(label) {
+	switch (label) {
+	case "Undo": return 'undo_move'
+	case "Redo": return 'redo_move'
+	case "New Game": return 'new_game'
+	case "Restart": return 'restart_game'
+	case "Pause": return '' // 'pause_game'
+	case "Continue": return '' // 'continue_game'
+	case "Hint": return '' // 'hint_move'
+	case "Scores": return '' // 'scores_page'
+	case "Preferences": return '' // 'prefs_page'
+	case "Help": return '' // 'help_page'
+	case "About": return '' // 'about_page'
+	default: 
+	    console.log("unhandled disable "+label)
+	    return ''
+	}
+    }
+	
+    menu_element(label) {
+	const id = this.menu_item_id(label);
+	if (id && id !== '' && this.shadowRoot && this.shadowRoot.getElementById) {
+	    return this.shadowRoot.getElementById(id)
+	}
+    }
+	
+    menu_update(label, disabled) {
+	const elt = this.menu_element(label)
+	if (elt) {
+	    if (disabled)
+		elt.setAttribute("disabled", "");
+	    else if (elt.hasAttribute("disabled"))
+		elt.removeAttribute("disabled")
+	}
+	this[this.menu_item_id(label)] = disabled;
+    }
+	
+    menu_is_disabled(label) {
+	const elt = this.menu_element(label)
+	if (elt) 
+	    this[this.menu_item_id(label)] = elt.hasAttribute("disabled")
+	return this[this.menu_item_id(label)]
+    }
+	
+    menu_enable_disable(enable, disable) {
+	enable.forEach((label) => this.menu_update(label, false))
+	disable.forEach((label) => this.menu_update(label, true))
+    }
+
+    menu_assert(labels) {
+	labels.forEach((label) => this.menu_update(label, this.menu_is_disabled(label)))
+    }
+    
+    menu_assert_all() { this.menu_assert(["New Game", "Restart", "Pause", "Hint", "Redo", "Scores", "Preferences", "Continue", "Undo"]) }
+
+    // tiles
+    position_tiles() { this.game.position_tiles() }
 
     tile_tap(name) { this.game.tile_tap(name) }
 
-    key_undo() { if ( ! this.game.menu_is_disabled("Undo")) this.action_undo() }
-    key_redo() { if ( ! this.game.menu_is_disabled("Redo")) this.action_redo() }
-    key_new() { if ( ! this.game.menu_is_disabled("New Game")) this.action_new() }
-    key_restart() { if ( ! this.game.menu_is_disabled("Restart")) this.action_restart() }
+    // defunct keyboard accelerators
+    key_undo() { if ( ! this.menu_is_disabled("Undo")) this.action_undo() }
+    key_redo() { if ( ! this.menu_is_disabled("Redo")) this.action_redo() }
+    key_new() { if ( ! this.menu_is_disabled("New Game")) this.action_new() }
+    key_restart() { if ( ! this.menu_is_disabled("Restart")) this.action_restart() }
     
-    dialog_undo() {
-	this.game.menu_enable_disable(["New Game", "Restart", "Pause", "Hint", "Redo", "Scores", "Preferences"], ["Continue", "Undo"])
-	this.game.history_undo()
-    }
-    dialog_new() { this.game.new_game(); this.updateGame(); }
-    dialog_restart() { this.game.restart_game() }
+    // dialogs
+    get youlose() { return this.shadowRoot.getElementById('youlose') }
+    get youwin() { return this.shadowRoot.getElementById('youwin') }
 
+    youlose_undo() { this.youlose.close(); this.dialog_undo() }
+    youlose_new() { this.youlose.close(); this.action_new() }
+    youlose_restart() { this.youlose.close(); this.action_restart() }
+    youwin_undo() { this.youwin.close(); this.dialog_undo() }
+    youwin_new() { this.youwin.close(); this.action_new() }
+    youwin_restart() { this.youwin.close(); this.action_restart() }
+
+    dialog_undo() {
+	this.menu_enable_disable(["New Game", "Restart", "Pause", "Hint", "Redo", "Scores", "Preferences"], ["Continue", "Undo"])
+	this.action_undo()
+    }
+
+    // shared actions
     action_undo() { this.game.history_undo() }
     action_redo() { this.game.history_redo() }
     action_new() { this.game.new_game(); this.update_game(); }
     action_restart() { this.game.restart_game() }
 
     seedChanged(seed) { console.log("seedChanged: "+seed); }
-    
 }
 
 window.customElements.define('mahjong-app', MahjongApp);

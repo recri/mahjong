@@ -1,6 +1,6 @@
 {
   "entrypoint": "index.html",
-  "shell": "src/mahjong-play.js",
+  "shell": "src/mahjong-app.js",
   "sources": [
     "images/**/*"
   ],

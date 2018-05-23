@@ -1,0 +1,5 @@
+* Todo list as of May 23, 2018
+[ ] Make the toolbar swing into the empty space
+[ ] Incorporate the mersenne-twister random number generator
+[ ] Move randomness into mahjong-app from mahjong-game
+[ ] Finish cleaning up the svg coordinates.

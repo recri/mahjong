@@ -1,5 +1,11 @@
 * Todo list as of May 23, 2018
-[ ] Make the toolbar swing into the empty space
-[ ] Incorporate the mersenne-twister random number generator
-[ ] Move randomness into mahjong-app from mahjong-game
+[x] Make the toolbar swing into the empty space.
+[ ] Incorporate the mersenne-twister random number generator.
+[ ] Move randomness into mahjong-app from mahjong-game.
 [ ] Finish cleaning up the svg coordinates.
+[ ] Reimplement hot keys.
+[ ] Implement tabIndex for traversing available moves.
+[ ] Style the button focused outline to fit tiles.
+[ ] Style the dialogs better.
+[ ] Add the installtohomepage event handler and implementor.
+

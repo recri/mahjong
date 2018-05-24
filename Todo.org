@@ -2,8 +2,14 @@
 [x] Make the toolbar swing into the empty space.
 	This stopped working as soon as I checked it off.
 	Changed to use min- and max-aspect-ratio instead.
+	This worked fine on my desktop, but it fails on
+	my phone, but it works on the phone simulator built
+	into Chrome dev tools.  Checked with quirksmode.org
+	and Chrome on my phone returns the same aspect-ratio
+	in both landscape and portrait orientations.
+[x] Make a Random class
+[x] Move randomness into mahjong-app from mahjong-game.
 [ ] Incorporate the mersenne-twister random number generator.
-[ ] Move randomness into mahjong-app from mahjong-game.
 [ ] Finish cleaning up the svg coordinates.
 [ ] Reimplement hot keys.
 [ ] Implement tabIndex for traversing available moves.

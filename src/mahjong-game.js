@@ -1,4 +1,3 @@
-import { alea } from './alea.js';
 import { Timer } from './timer.js';
 
 //
@@ -11,7 +10,7 @@ import { Timer } from './timer.js';
 // new_game()
 // restart_game()
 //
-export function Game(root, layout, tiles, seed) {
+export function Game(root, layout, tiles, random) {
     // local variables
     let title = "mahjong"
     let shuffled_tiles = null
@@ -26,26 +25,7 @@ export function Game(root, layout, tiles, seed) {
     let status_started = false
     let name_to_slot = new Map()
     let timer = new Timer()
-    // local functions
-    let random = alea("this is the seed").double
 
-    function srandom(seed) { random = alea(seed).double }
-
-    function shuffle(list) {
-	list = list.slice(0)
-	let n = list.length
-	for (let i = 0; i < n; i += 1) {
-	    let j = i + Math.floor(random()*(n-i))
-	    if (i != j) {
-		let li = list[i]
-		let lj = list[j]
-		list[i] = lj
-		list[j] = li
-	    }
-	}
-	return list
-    }
-    
     function slot_string(slot) { return slot.join(",") }
 
     function format_game (game) {
@@ -107,10 +87,6 @@ export function Game(root, layout, tiles, seed) {
 	layout_sizes : () => layout.sizes(),
 	xy_for_slot : (slot) => tiles.xy_for_slot(slot),
 
-
-	first_game : function() {
-	    this.new_game()
-	},
 	new_game : function() {
 	    this.setup()
 	    for (let done = false; ! done; ) {
@@ -277,27 +253,17 @@ export function Game(root, layout, tiles, seed) {
 
 	//
 	// setup the next game
+	// the shuffled slots and tiles are 
 	// 
 	setup : function() {
-	    // set up for a new game which might be restarted
-	    // so, game number seeds random number generator, 
-	    // results in shuffle of -slots and -tiles
-	    // the optional $game may be supplying a game by name
-	    // or simply the time
-	    if (location.hash === "") { 
-		seed = "#"+Date.now()
-	    } else {
-		seed = location.hash
-		location.hash = ""
-	    }
-	    srandom(seed)
-	    shuffled_slots = shuffle(this.get_all_slots())
-	    shuffled_tiles = shuffle(this.get_tiles())
+	    shuffled_slots = random.shuffle(this.get_all_slots())
+	    shuffled_tiles = random.shuffle(this.get_tiles())
 	    this.start_status()
 	},
     
 	//
-	// start or restart the currently setup game
+	// start a new game 
+	// or restart the currently setup game
 	//
 	restart : function() {
 	    // save the result of the last game
@@ -669,8 +635,5 @@ export function Game(root, layout, tiles, seed) {
 	get_seed : function() { return seed; }
     }
 
-    // console.log("Game() begins")
-    game.first_game()
-    // console.log("Game() finished")
     return game
 }

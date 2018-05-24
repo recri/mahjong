@@ -7,6 +7,8 @@ import { Tiles } from './mahjong-tiles.js';
 import { Layout } from './mahjong-layout.js';
 import { Game } from './mahjong-game.js';
 
+import { Random } from './random.js'
+
 class MahjongApp extends (LitElement) {
     static get properties() {
 	return {
@@ -118,6 +120,9 @@ class MahjongApp extends (LitElement) {
 	this.new_game = false
 	this.restart_game = false
 	
+	// random numbers
+	this.random = new Random();
+
 	// tile layout
 	this.layout = Layout(this);
 	
@@ -125,9 +130,9 @@ class MahjongApp extends (LitElement) {
 	this.tiles = Tiles(this, this.layout)
 
 	// game
-	this.game = Game(this, this.layout, this.tiles, "")
+	this.game = Game(this, this.layout, this.tiles, this.random)
 
-	this.update_game();
+	this.start_new_game();
     }
 
     _firstRendered() {
@@ -148,9 +153,10 @@ class MahjongApp extends (LitElement) {
 	console.log("mahjong-app enters _stateChanged");
     }
     
-    update_game() {
-	this.seed = this.game.get_seed();
-	// this._requestRender();
+    start_new_game() {
+	this.seed = Date.now()
+	this.random.srandom(this.seed);
+	this.game.new_game();
     }
     
     window_resize(e) { 
@@ -160,7 +166,6 @@ class MahjongApp extends (LitElement) {
 	    this.game.window_resize(200, 200);
 	else
 	    this.game.window_resize(window.innerWidth, window.innerHeight);
-	// this._requestRender();
     }
 
     // toolbar menu management
@@ -249,10 +254,9 @@ class MahjongApp extends (LitElement) {
     // shared actions
     action_undo() { this.game.history_undo() }
     action_redo() { this.game.history_redo() }
-    action_new() { this.game.new_game(); this.update_game(); }
+    action_new() { this.start_new_game(); }
     action_restart() { this.game.restart_game() }
 
-    seedChanged(seed) { console.log("seedChanged: "+seed); }
 }
 
 window.customElements.define('mahjong-app', MahjongApp);

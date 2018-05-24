@@ -1,5 +1,7 @@
 * Todo list as of May 23, 2018
 [x] Make the toolbar swing into the empty space.
+	This stopped working as soon as I checked it off.
+	Changed to use min- and max-aspect-ratio instead.
 [ ] Incorporate the mersenne-twister random number generator.
 [ ] Move randomness into mahjong-app from mahjong-game.
 [ ] Finish cleaning up the svg coordinates.

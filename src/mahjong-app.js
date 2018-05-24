@@ -55,16 +55,13 @@ class MahjongApp extends (LitElement) {
   .definitions {
     display:none; 
   }
-  @media screen and (orientation: landscape) {
-    div#toolbar-menu {
-      width: 30px;
-    }
+
+  @media (max-aspect-ratio: 1/1) {
+    div#toolbar-menu { width: 100%; height: 30px; }
   }
 
-  @media screen and (orientation: portrait) {
-    div#toolbar-menu {
-      width: 100%;
-    }
+  @media (min-aspect-ratio: 1/1) {
+    div#toolbar-menu { width: 30px; height: 100%; }
   }
 
   button.tile { display:inline; margin: 0 0; padding: 0 0; border: 0; background-color: transparent; }

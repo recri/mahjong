@@ -43,3 +43,5 @@
         deferredPrompt = null;
       });
   });
+[ ] figure out how to enable the tap gesture, though may be moot
+    as click seems to work fine

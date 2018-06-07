@@ -1,16 +1,19 @@
-import { alea } from './alea.js';
+import { MersenneTwister } from './mersenne-twister.js';
 
 export class Random {
 
     constructor(seed) {
-	srandom(seed)
+	this.seed = seed || Date.now()
+	this.r = new MersenneTwister(this.seed)
     }
 
     srandom(seed) {
 	this.seed = seed || Date.now()
-	this.random = alea(this.seed).double
+	this.r.reseed(this.seed)
     }
 
+    random() { return this.r.random(); }
+	
     shuffle(array) {
 	array = array.slice(0)	// copy array
 	const n = array.length

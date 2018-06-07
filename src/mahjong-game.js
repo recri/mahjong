@@ -94,10 +94,10 @@ export function Game(root, layout, tiles, random) {
 		try {
 		    this.restart()
 		} catch(e) {
-		    console.log("restart failed: "+e)
-		    console.log(e.stack)
+		    // console.log("restart failed: "+e)
+		    // console.log(e.stack)
 		    // return	// remove me when debugged
-		    console.log("reshuffling and retrying")
+		    // console.log("reshuffling slots and retrying")
 		    shuffled_slots = shuffle(shuffled_slots)
 		    done = false
 		}

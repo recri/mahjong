@@ -45,3 +45,4 @@
   });
 [ ] figure out how to enable the tap gesture, though may be moot
     as click seems to work fine
+[ ] the app doesn't render on Firefox!
